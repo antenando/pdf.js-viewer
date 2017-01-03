@@ -1,2 +1,2 @@
-# pdf.js-viewer
+# Pdf.js-viewer
 mozilla pdf.js viewer
