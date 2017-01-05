@@ -1289,20 +1289,55 @@ var pdfjsWebLibs;
     e.preventDefault();
    }
    function getPDFFileNameFromURL(url) {
+    var queryString = document.location.search.substring(1);
+    var params = parseQueryString(queryString);
     var reURI = /^(?:([^:]+:)?\/\/[^\/]+)?([^?#]*)(\?[^#]*)?(#.*)?$/;
     var reFilename = /[^\/?#=]+\.pdf\b(?!.*\.pdf\b)/i;
     var splitURI = reURI.exec(url);
     var suggestedFilename = reFilename.exec(splitURI[1]) || reFilename.exec(splitURI[2]) || reFilename.exec(splitURI[3]);
-    if (suggestedFilename) {
-     suggestedFilename = suggestedFilename[0];
-     if (suggestedFilename.indexOf('%') !== -1) {
-      try {
-       suggestedFilename = reFilename.exec(decodeURIComponent(suggestedFilename))[0];
-      } catch (e) {
+
+    if ( params.filename != undefined ) {
+      suggestedFilename = clearString(params.filename);
+    } else if (suggestedFilename) {
+      suggestedFilename = suggestedFilename[0];
+      if (suggestedFilename.indexOf('%') !== -1) {
+        try {
+          suggestedFilename = reFilename.exec(decodeURIComponent(suggestedFilename))[0];
+        } catch (e) {
+        }
       }
-     }
     }
+
     return suggestedFilename || 'document.pdf';
+   }
+   function clearString(str) {
+    if ( typeof str != 'string' ) return;
+    var specialChars = [
+      {val:'a',let:'áàãâä'},
+      {val:'e',let:'éèêë'},
+      {val:'i',let:'íìîï'},
+      {val:'o',let:'óòõôö'},
+      {val:'u',let:'úùûü'},
+      {val:'c',let:'ç'},
+      {val:'A',let:'ÁÀÃÂÄ'},
+      {val:'E',let:'ÉÈÊË'},
+      {val:'I',let:'ÍÌÎÏ'},
+      {val:'O',let:'ÓÒÕÔÖ'},
+      {val:'U',let:'ÚÙÛÜ'},
+      {val:'C',let:'Ç'},
+      {val:'',let:'?!()'}
+    ];
+    var $spaceSymbol = '-';
+    var regex;
+    var returnString = str;
+
+    for (var i = 0; i < specialChars.length; i++) {
+      regex = new RegExp('['+specialChars[i].let+']', 'g');
+      returnString = returnString.replace(regex, specialChars[i].val);
+      regex = null;
+    }
+
+    return returnString.replace(/[^A-Za-z0-9]+/g,$spaceSymbol).replace(/^[\-]+/,'').replace(/[\-]+$/,'').toLowerCase();
    }
    function normalizeWheelEventDelta(evt) {
     var delta = Math.sqrt(evt.deltaX * evt.deltaX + evt.deltaY * evt.deltaY);
